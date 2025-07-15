@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Molecular Viewer Toggle</title>
+  <script src="/js/jmol/jsmol/jquery/jquery.min.js"></script>
+  <script src="/js/ngl.js"></script>
+  <script type="text/javascript" src="/js/jmol/jsmol/JSmol.min.js"></script>
+
+  <style>
+    #nglViewer, #jmolViewer {
+      width: 500px;
+      height: 500px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Viewer Containers -->
+<div id="nglViewer"></div>
+<div id="jmolViewer"></div>
+
+<!-- Toggle UI -->
+<select id="viewerSelector">
+  <option value="ngl">NGL Viewer</option>
+  <option value="jsmol">JSmol Viewer</option>
+</select>
+
+<button onclick="resetViewer()">Reset</button>
+
+<script>
+  let stage, viewer1;
+
+  function loadNGL() {
+    $('#jmolViewer').hide();
+    $('#nglViewer').show();
+
+    stage = new NGL.Stage("nglViewer");
+    stage.loadFile("molecules/output.pdb", { defaultRepresentation: true });
+    window.addEventListener("resize", () => stage.handleResize(), false);
+  }
+
+  function loadJSmol() {
+    $('#nglViewer').hide();
+    $('#jmolViewer').show();
+
+    const Info = {
+      width: 500,
+      height: 500,
+      debug: false,
+      color: "black",
+      addSelectionOptions: false,
+      use: "HTML5",
+      j2sPath: "js/jmol/jsmol/j2s",   // ✅ Ensure this path is correct
+      script: "load molecules/hemoglobin.pdb; spin on;",
+      coverImage: "",
+      coverScript: ""
+    };
+
+    // ✅ Proper viewer assignment
+    viewer1 = Jmol.getApplet("viewer1", Info);
+    $("#jmolViewer").html(Jmol.getAppletHtml(viewer1));
+  }
+
+  function resetViewer() {
+    const selected = $("#viewerSelector").val();
+    if (selected === "ngl" && stage) {
+      stage.removeAllComponents();
+      stage.loadFile("molecules/output.pdb", { defaultRepresentation: true });
+    } else if (selected === "jsmol" && viewer1) {
+      Jmol.script(viewer1, "reset; spin on;");
+    }
+  }
+
+  $(document).ready(function () {
+    // Default viewer load
+    const initialViewer = $("#viewerSelector").val();
+    if (initialViewer === "ngl") loadNGL();
+    else loadJSmol();
+
+    // Handle dropdown change
+    $("#viewerSelector").on("change", function () {
+      const viewer = $(this).val();
+      if (viewer === "ngl") loadNGL();
+      else loadJSmol();
+    });
+  });
+</script>
+
+</body>
+</html>
